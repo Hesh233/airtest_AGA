@@ -8,6 +8,7 @@ RESTART_TIME_THROUGH = 0
 with open("cfg/cfg_重启时间.txt", "r", encoding="utf-8") as f:
     RESTART_TIME_THROUGH = int(f.readlines()[-1].rstrip("\n"))
 f.close()
+TPL_BTN_CLOSE1 = Template(r"pic/btn_close.png", resolution=(720, 1280), record_pos=(-0.001, 0.682),threshold=0.8)
 TPL_MISSION_ENTRY0 = Template(r"pic/mission_entry0.png",  resolution=(720, 1280))
 TPL_MISSION_ENTRY1 = Template(r"pic/mission_entry1.png",  resolution=(720, 1280))
 TPL_MISSION_ENTRY2 = Template(r"pic/mission_entry2.png",  resolution=(720, 1280),threshold=0.9)
@@ -33,8 +34,8 @@ def start_short_cycle(is_open_game,attack_type,cost_coin_num,is_coin_pass,start_
             wait(TPL_ROUGE_MAIN_PAGE,timeout=30)
             wait(TPL_INFO,timeout=30)            
         is_map_start = 0  # 通关下轮循环自动设为1，防止进度识别bug
-        restart_time_start = 0
-        restart_time_end = 0
+        restart_time_start = time.time()
+        # restart_time_end = 0
         while True:
             check_connecting_on_main_page(is_cell_check=False)    
             sleep(1)
@@ -82,10 +83,11 @@ def start_short_cycle(is_open_game,attack_type,cost_coin_num,is_coin_pass,start_
             is_map_start = 1  
             if is_dec_shell:
                 dec_item()  #自动解析贝壳            
-            restart_time_start = restart_time_end
+            # restart_time_start = restart_time_end
             restart_time_end = time.time()
             if RESTART_TIME_THROUGH != 0 and restart_time_start != 0 and round(restart_time_end - restart_time_start, 2) > RESTART_TIME_THROUGH: # 大于X小时重启游戏
-                print("当前运行时间大于"+str(RESTART_TIME_THROUGH)+"秒，重启游戏防止意外崩溃")
+                restart_time_start = restart_time_end # 更新启动时间
+                print("当前运行时间大于"+str(RESTART_TIME_THROUGH)+"秒，重启游戏防止卡顿")
                 stop_app("jp.colopl.alice")
                 sleep(3)                
                 return start_short_cycle(is_open_game=1,attack_type=attack_type,cost_coin_num=cost_coin_num,is_coin_pass=is_coin_pass,start_step=1,is_dec_shell=is_dec_shell)
@@ -95,11 +97,22 @@ def start_short_cycle(is_open_game,attack_type,cost_coin_num,is_coin_pass,start_
         print(traceback.format_exc())  
         print("出错了，结束执行")
         title = "NORNAL_ERROR"        
-        if isinstance(e.args[0], str) and  "检测" in e.args[0]: # 之前执行有出处，先弄容错
+        if isinstance(e.args[0], str) and  "检测" in e.args[0]: # 之前执行有出错，先弄容错
                 title = e.args[0]
         img = G.DEVICE.snapshot()           
         save_snapshot_cv2(img,title)
-        print(traceback.format_exc())              
-        stop_app("jp.colopl.alice")
-        sleep(3)
-        return start_short_cycle(is_open_game=1,attack_type=attack_type,cost_coin_num=cost_coin_num,is_coin_pass=is_coin_pass,start_step=1,is_dec_shell=is_dec_shell)
+        print(traceback.format_exc())    
+        print("检查能否正常操作")        
+        is_close_btn = find_all(TPL_BTN_CLOSE1)  
+        if is_close_btn:  # 关掉解析解密
+            touch(TPL_BTN_CLOSE1)                 
+        try:
+            is_not_in_rouge = check_connecting_on_main_page(is_cell_check=False,is_cell_check2=False)
+            if not is_not_in_rouge:
+                print("可以正常操作，开始原地重新识别路线")
+                return start_short_cycle(is_open_game=2,attack_type=attack_type,cost_coin_num=cost_coin_num,is_coin_pass=is_coin_pass,start_step=1,is_dec_shell=is_dec_shell)
+        except:
+            print("不能正常操作，关闭游戏重开")                  
+            stop_app("jp.colopl.alice")
+            sleep(3)
+            return start_short_cycle(is_open_game=1,attack_type=attack_type,cost_coin_num=cost_coin_num,is_coin_pass=is_coin_pass,start_step=1,is_dec_shell=is_dec_shell)

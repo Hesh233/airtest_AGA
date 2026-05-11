@@ -179,6 +179,7 @@ def run_map_cfg(cfg_list,attack_type,map_name,is_coin_pass,start_step,cost_coin_
             continue
         sleep(0.5)  
         if check_connecting_on_main_page(is_cell_check2=is_cell_check2,is_cell_check=is_cell_check): 
+            sleep(1) # 100%充能+100s点叠加等待
             check_connecting_on_main_page(is_cell_check=False,is_cell_check2=False) # 防止弹出奖励点击过快   
             sleep(0.2) 
         if not is_cell_check and not is_cell_check2:
@@ -203,6 +204,8 @@ def run_map_cfg(cfg_list,attack_type,map_name,is_coin_pass,start_step,cost_coin_
             res_is_coin_pass = 0             
             if is_coin_pass and "skip" in cell:                   
                     res_is_coin_pass = 1
+                    if "skip2" in cell:
+                        res_is_coin_pass = 2
             start_time = time.time()     
             fight(cost_coin_num, attack_type, res_is_coin_pass, is_check_green=False)  
             execution_time = round(time.time() - start_time, 2)   
@@ -532,7 +535,7 @@ def find_move_base_pos():
         last2_pos = last1_pos
         for i in res_pos_list:
             if i != 0:
-                print("随机方向拖动到最远距离的勾上")   
+                print("随机方向第"+str(i)+"次拖动到最远距离的勾上")   
                 if n > 25: # 25后开始随机移动位置
                     random_count = random.randint(0,pos_length-1)
                     i[1] = max_list[random_count][1]

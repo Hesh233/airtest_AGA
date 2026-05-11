@@ -6,7 +6,7 @@ from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 import logging
 from datetime import datetime
 from rouge_parts import *
-
+from event_parts import *
 from run_daily import *
 from rougev2_parts import *
 from start_parts import *
@@ -31,6 +31,7 @@ def gui_run(conn=None,run_param="",coin_count_pass=4000000,is_open_game=0,attack
         print(file_path)
         print("文件路径含有中文，请改成英文路径。结束运行")
         return
+    # os.environ["ADB"] = r"E:\\MuMu\\shell\\adb.exe"
     if not cli_setup():            
         auto_setup(__file__, devices=["android://127.0.0.1:5037/127.0.0.1:"+port+"?cap_method=ADBCAP",])
         poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=False)
@@ -58,5 +59,15 @@ def gui_run(conn=None,run_param="",coin_count_pass=4000000,is_open_game=0,attack
     if run_param == "rougelike_cycle_short_pass":
         is_coin_pass = 1
         start_short_cycle(is_open_game,attack_type,coin_count_pass,is_coin_pass,start_step,is_dec_shell,is_read_spoint)    
+    if run_param == "event_cycle":
+        event_cycle(attack_type,start_step,is_dec_shell,coin_count_pass)
+        raise Exception("执行完毕")
+if __name__ == '__main__':
+    if not cli_setup():            
+        auto_setup(__file__, devices=["android://127.0.0.1:5037/127.0.0.1:"+"5557"+"?cap_method=MINITOUCH",])
+        poco = AndroidUiautomationPoco(use_airtest_input=True, screenshot_each_action=False)
+    dev = device()
+    dec_item("event")
+    # print(touch_4_item())
 
 

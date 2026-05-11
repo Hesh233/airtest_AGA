@@ -30,6 +30,7 @@ TPL_GOTO_FIGHT_ICON = Template(r"pic/goto_fight_icon.png",  resolution=(720, 128
 TPL_S_ICON = Template(r"pic/s_icon.png", record_pos=(-0.314, 0.414), resolution=(720, 1280),threshold=0.85)
 TPL_PASS_ICON = Template(r"pic/pass_icon.png", record_pos=(-0.09, 0.586), resolution=(720, 1280))
 TPL_USE_COIN_PASS = Template(r"pic/use_coin_pass.png", record_pos=(0.207, 0.021), resolution=(720, 1280))
+TPL_USE_ITEM_PASS = Template(r"pic/use_item_pass.png", record_pos=(-0.225, 0.014), resolution=(720, 1280))
 TPL_BTN_YES = Template(r"pic/btn_yes.png", resolution=(720, 1280))
 TPL_BTN_CLOSE = Template(r"pic/btn_close.png", resolution=(720, 1280))
 TPL_BTN_CLOSE1 = Template(r"pic/btn_close.png", resolution=(720, 1280), record_pos=(-0.001, 0.682),threshold=0.8)
@@ -617,20 +618,22 @@ def fight(cost_coin_num,attack_type, is_coin_pass,is_fight_test=0,is_fight_ready
     sleep(0.5)
     if not is_fight_test:
         if is_coin_pass: # 消耗金币快速通关
-            # 充能加速也不跳(可选)
-            # is_energy_item = find_all(Template(r"pic/energy_icon.png", record_pos=(-0.317, 0.407), resolution=(720, 1280),threshold=0.85))
+            # 充能加速也不跳(可选)            
             is_spoint_place = find_all(TPL_S_ICON)
             if not is_spoint_place: #  or not is_energy_item
                 # 检查金币是否足够,不足显示红色
                 region = (340, 1085, 82, 42) 
+                if is_coin_pass == 2:
+                    region = (240, 1085, 52, 32)                                    
                 img = G.DEVICE.snapshot()        
                 is_red_count = check_color_exists(img, region, "red")     
                 if not is_red_count:
-                    region = (350, 420, 42, 42)
-                    if is_check_green:
-                        is_green_level = check_color_exists(img, region, "green")  
-                    else:
-                        is_green_level = 1
+                    # region = (350, 420, 42, 42)
+                    # if is_check_green:
+                    #     is_green_level = check_color_exists(img, region, "green")  
+                    # else:
+                    #     is_green_level = 1
+                    is_green_level = 1
                     if is_green_level:
                         coin_count = 0
                         if cost_coin_num != 0:
@@ -654,11 +657,15 @@ def fight(cost_coin_num,attack_type, is_coin_pass,is_fight_test=0,is_fight_ready
                         # coin_count = num_ocr(img)
                         # 金币在xx以上才使用跳过，有概率识别错误，出现偶尔不跳关的情况，所以要注意
                         del img 
-                        if int(coin_count) >= cost_coin_num:
-                            print("使用金币跳过地图")
+                        if int(coin_count) >= cost_coin_num or is_coin_pass == 2:
                             touch(TPL_PASS_ICON)
                             # 消耗金币按钮
-                            touch(TPL_USE_COIN_PASS)
+                            if is_coin_pass == 2:
+                                print("使用券跳过地图")
+                                touch(TPL_USE_ITEM_PASS)                                
+                            else:
+                                print("使用金币跳过地图")
+                                touch(TPL_USE_COIN_PASS)                                
                             sleep(0.2)
                             touch(TPL_BTN_YES)    
                             sleep(0.3)                    
@@ -688,9 +695,9 @@ def fight(cost_coin_num,attack_type, is_coin_pass,is_fight_test=0,is_fight_ready
             wait(TPL_BAT_START,timeout=35)
         except:
             print("进入战斗检测已超时,开始检查993")   
-            i = 0
-            while i <= 2:
-                i += 1                    
+            count_time = 0
+            while count_time <= 2:
+                count_time += 1                    
                 if find_all(TPL_BTN_CLOSE):                        
                     res1 = False
                     try:
@@ -715,7 +722,11 @@ def fight(cost_coin_num,attack_type, is_coin_pass,is_fight_test=0,is_fight_ready
                         for i in range(0,35):
                             touch((0.5,0.87))
                             sleep(0.3)                        
-                        break                                  
+                        break 
+            sleep(5)
+            for i in range(0,35):
+                touch((0.5,0.87))
+                sleep(0.3)              
         # print("等待图片结束，进入战斗")
         # sleep(1) # 加载
     # 进入战斗
